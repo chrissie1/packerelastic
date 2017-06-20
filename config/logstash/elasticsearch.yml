@@ -1,0 +1,16 @@
+cluster.name: nicc
+node.name: "logstash01"
+node.master: false
+node.data: false
+node.ingest: false
+network:
+  host : 192.168.0.14
+http:
+  port: 9200
+discovery.zen.ping.unicast.hosts: ["192.168.0.10", "192.168.0.11", "192.168.0.12"]
+discovery.zen.minimum_master_nodes: 2
+xpack.graph.enabled: false
+xpack.ml.enabled: false
+xpack.monitoring.enabled: true
+xpack.security.enabled: false
+xpack.watcher.enabled: false

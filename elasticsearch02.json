@@ -1,0 +1,93 @@
+{
+  "provisioners": [
+	{ "type": "shell", "execute_command": "echo 'ubuntu' | {{.Vars}} sudo -S -E bash '{{.Path}}'", "script": "scripts/setup.sh"},
+	
+	{ "type": "shell", "inline": ["sudovagrant apt-get update"]},
+	{ "type": "shell", "inline": ["sudovagrant apt-get --yes --force-yes install openjdk-8-jre"]},
+	{ "type": "shell", "inline": ["sudovagrant apt-get --yes --force-yes  install curl"]},
+	{ "type": "shell", "inline": ["sudovagrant apt-get --yes --force-yes  install ufw"]},
+	{ "type": "shell", "inline": ["sudovagrant apt-get --yes --force-yes  install net-tools"]},
+	
+	{ "type": "shell", "inline": ["sudo ufw --force enable" ]},
+	{ "type": "shell", "inline": ["sudo ufw allow 22"]},
+	{ "type": "shell", "inline": ["sudo ufw allow from any to any port 9200:9400 proto tcp"]},
+	
+	{ "type":"file", "source":"./resources/elasticsearch-5.4.0.deb", "destination": "elasticsearch-5.4.0.deb"},
+	{ "type": "shell", "inline": [ "sudo dpkg -i elasticsearch-5.4.0.deb","sudo apt-get install -f"]},
+	{ "type": "shell", "inline": [ "sudo chmod -R 777 /etc/elasticsearch"]},
+	{ "type":"file", "source":"./config/02/elasticsearch.yml", "destination": "/etc/elasticsearch/elasticsearch.yml"},
+	{ "type":"file", "source":"./config/02/jvm.options", "destination": "/etc/elasticsearch/jvm.options"},
+		
+	{ "type":"file", "source":"./resources/x-pack-5.4.0.zip", "destination": "x-pack-5.4.0.zip"},
+	{ "type": "shell", "inline": [ "sudo /usr/share/elasticsearch/bin/elasticsearch-plugin install file:///home/ubuntu/x-pack-5.4.0.zip --batch"]},
+				
+	{ "type": "shell", "inline": [ "sudo /bin/systemctl daemon-reload"]},
+	{ "type": "shell", "inline": [ "sudo /bin/systemctl enable elasticsearch.service"]},
+	{ "type": "shell", "inline": [ "sudo /bin/systemctl start elasticsearch.service"]},	
+		
+	{ "type": "shell", "inline": [ "sudo loadkeys be"]}	
+		
+		
+  ],
+  "builders": [
+    {
+      "type": "virtualbox-iso",
+      "boot_command": [
+        "<enter><wait><f6><esc><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+        "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+        "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+        "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+        "/install/vmlinuz<wait>",
+        " auto<wait>",
+        " console-setup/ask_detect=false<wait>",
+        " console-setup/layoutcode=be<wait>",
+        " console-setup/modelcode=pc105<wait>",
+        " debconf/frontend=noninteractive<wait>",
+        " debian-installer=en_US<wait>",
+        " fb=false<wait>",
+        " initrd=/install/initrd.gz<wait>",
+        " kbd-chooser/method=be<wait>",
+        " keyboard-configuration/layout=Belgium<wait>",
+        " keyboard-configuration/variant=Belgium<wait>",
+        " locale=en_US<wait>",
+        " netcfg/get_domain=<wait>",
+        " netcfg/get_hostname=elasticsearch02<wait>",
+        " grub-installer/bootdev=/dev/sda<wait>",
+        " noapic<wait>",
+        " preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg",
+        " -- <wait>",
+        "<enter><wait>"
+      ],
+      "boot_wait": "10s",
+      "disk_size": 204800,
+      "guest_os_type": "Ubuntu_64",
+      "headless": true,
+      "http_directory": "http",
+      "iso_url": "iso/ubuntu-17.04-server-amd64.iso",
+      "iso_checksum_type": "none",
+      "ssh_username": "ubuntu",
+      "ssh_password": "ubuntu",
+      "ssh_port": 22,
+      "ssh_wait_timeout": "10000s",
+      "shutdown_command": "echo 'ubuntu'|sudo -S shutdown -P now",
+      "output_directory": "elasticsearch02",
+      "vm_name": "elasticsearch02",
+      "vboxmanage": [
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--memory",
+          "24576"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--cpus",
+          "4"
+        ]
+      ]
+    }
+  ]
+}
+  
+ 
